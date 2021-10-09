@@ -130,7 +130,7 @@ message.success("开通成功")
 }
   })
 }
-const [formtj] =   Form.useForm()
+const [formtj] = Form.useForm()
     return ( 
         <div style={{width:"100%"}}>
             <Card>

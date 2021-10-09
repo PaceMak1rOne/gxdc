@@ -19,6 +19,7 @@ import BasicTable from './pages/table/basicTable';
 import HeightTable from './pages/table/heightTable';
 import Rich from './pages/rich';
 import City from './pages/city';
+import Order from './pages/order';
 // import { GContext } from './CountContext';
 // import { Provider } from 'react';
 const IRouter = () => {
@@ -43,6 +44,8 @@ const IRouter = () => {
                         <Route  path='/table/high' component={HeightTable}/>
                         <Route  path='/rich' component={Rich}/>
                         <Route  path='/city' component={City}/>
+                        <Route  path='/order' component={Order}/>
+
                         <Route  component={NoMatch} />
                         </Switch>
                         </Admin>
