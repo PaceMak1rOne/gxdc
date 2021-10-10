@@ -130,6 +130,7 @@ const BasicTable = () => {
         const onRowClick = (record,index) =>{
         //    获取index索引
        let selectKey = [index];
+    //    console.log(selectKey)
        Modal.info({
            title:"信息",
            content:`用户名:${record.userName},用户地址:${record.address}`

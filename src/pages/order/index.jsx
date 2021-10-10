@@ -1,12 +1,16 @@
 import React,{useState,useEffect} from 'react'
-import {Card,Button,Table, DatePicker,Select,Form,Pagination} from 'antd'
+import {Card,Button,Table, DatePicker,Select,Form,Pagination,Modal,message} from 'antd'
 import Axios from '../../axios'
 const { Option } = Select;
 // const { RangePicker } = DatePicker;
 const Order = () => {
     let [dataSource,setDataSource] = useState({
         list:[],
-        page:1
+        page:1,
+        orderConfirmVisible:false,
+        orderInfo:[],
+        selectedRowKeys:[],
+        selectItem:[]
     })
      const params={
          page:1
@@ -106,6 +110,76 @@ const Order = () => {
               }
     })
     let {onChangePage} = useFenye();
+    //订单结束确认
+  const handleFindish = () =>{
+    let id =  dataSource.selectItem.id;
+    if(!id){
+        Modal.info({
+            title:"信息",
+            content:"请选择一条订单进行结束"
+        })
+        return
+    }
+        Axios.ajax({
+            url:"/order/bike_info",
+            data:{
+                parmas:id
+            }
+        }).then(res=>{
+            if(res.code == "0"){
+            setDataSource({...dataSource,orderConfirmVisible:true,orderInfo:res.result})
+            }
+        })
+    }
+    //结束订单
+    const handleFindishOrder = () =>{
+        Axios.ajax({
+            url:"/order/finish_order",
+            data:{
+                parmas:{
+                    page:params.page
+                }
+            }
+        }).then(res=>{
+            if(res.code == "0"){
+                message.success("订单结束成功")
+            setDataSource({...dataSource,orderConfirmVisible:false})
+            Axios.ajax({
+                url:"/order/list",
+                data:{
+                    params:{
+                        page:params.page
+                    }
+                }
+            })
+            .then(res=>{
+                if(res.code == "0"){
+                let data = res.result;
+                setDataSource({...dataSource,list:data.list,orderConfirmVisible:false})
+                }
+            })
+            }
+        })
+    }
+    //进行栅格布局
+    const formItemLayout ={
+        labelCol:{span:5},
+        wrapperCol:{span:10}
+    }
+    //定义表格的单选按钮
+    const selectRowKeys = dataSource.selectedRowKeys;
+    const rowSelection = {
+        type:"radio", 
+        selectedRowKeys:selectRowKeys   
+    }
+    //选择的订单点击行
+    const onRowClick = (record,index) =>{
+        //    获取index索引
+       let selectKey = [index];
+       console.log(selectKey)
+       
+    setDataSource({...dataSource,selectedRowKeys:selectKey,selectItem:record});
+       }
     return ( 
         <div style={{width:"100%"}}>
         <Card>
@@ -113,17 +187,50 @@ const Order = () => {
         </Card>
         <Card style={{marginTop:10}}>
             <Button type="primary" style={{marginRight:15}}>订单详情</Button>
-            <Button>结束详情</Button>
+            <Button onClick={()=>handleFindish()}>结束订单</Button>
         </Card>
         <div>
         <Table
+        //给表格进行添加单选按钮
             bordered
             columns={columns}
             dataSource={dataSource.list}
             pagination={false}
+            rowSelection={rowSelection}
+            onRow={(record,index) => {
+                return {
+                  onClick: () =>onRowClick(record,index) // 点击行
+                  
+                };
+            }}
             />
-            <Pagination defaultCurrent={1} showQuickJumper total={85} style={{textAlign:"right"}} onChange={onChangePage}/>
+            <Pagination defaultCurrent={1} showQuickJumper total={85} style={{textAlign:"right"}} onChange={()=>{onChangePage()}}/>
         </div>
+        <Modal
+        title="结束订单"
+        visible={dataSource.orderConfirmVisible}
+        onCancel={()=>{
+            setDataSource({...dataSource,orderConfirmVisible:false})
+        }
+        }
+        onOk={handleFindishOrder}
+        width={600}
+                >
+                <Form layout="horizontal">
+                    <Form.Item label="车辆编号" {...formItemLayout}>
+                      {dataSource.orderInfo.bike_sn}
+                    </Form.Item>
+                    <Form.Item label="剩余电量" {...formItemLayout}>
+                      {dataSource.orderInfo.battery + "%"}
+                    </Form.Item>
+                    <Form.Item label="行程开始时间" {...formItemLayout}>
+                      {dataSource.orderInfo.start_time}
+                    </Form.Item>
+                    <Form.Item label="当前位置" {...formItemLayout}>
+                      {dataSource.orderInfo.location}
+                    </Form.Item>
+                </Form>
+                </Modal>
         </div >
      );
 }
